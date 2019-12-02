@@ -1,2 +1,2 @@
-# wp-Contributor
+# wp-contributor
 Wordpress Contributor plugin
