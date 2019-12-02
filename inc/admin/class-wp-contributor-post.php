@@ -89,8 +89,7 @@ class WP_Contributor_Post {
 			return;
 		}
 
-		$nonce     = filter_input( INPUT_POST, $this->nonce_key, FILTER_SANITIZE_STRING );
-		echo $nonce;
+		$nonce = filter_input( INPUT_POST, $this->nonce_key, FILTER_SANITIZE_STRING );
 		if (
 			! $nonce ||
 			! wp_verify_nonce( $nonce, '_' . $this->nonce_key ) ||
