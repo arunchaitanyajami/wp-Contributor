@@ -1,7 +1,17 @@
 <?php
+/**
+ * Wp Contributor Content Filter.
+ *
+ * @package WordPress
+ */
+
 namespace Contributor\inc\content;
 
 class WP_Contributor_Post_Content_Filter {
+
+	/**
+	 * WP_Contributor_Post_Content_Filter constructor.
+	 */
 	public function __construct() {
 		add_action( 'the_excerpt', [ $this, 'show_multi_authors' ] );
 		add_action( 'the_content', [ $this, 'show_multi_authors' ] );
@@ -18,13 +28,13 @@ class WP_Contributor_Post_Content_Filter {
 	 */
 	public function show_multi_authors( $content ) {
 
-		$contributors = get_post_meta( get_the_ID(), 'contributors', true );
+		$contributors = get_post_meta( get_the_ID(), CB_TAXONOMY, true );
 		/* If there are not multiple authors associated , then don't do anything */
 		if ( empty( $contributors ) ) {
 			return $contributors;
 		}
 
-		$markup  = '<div class="contributors-box">' . __( 'Contributors: ', 'contributors' );
+		$markup  = '<div class="contributors-box">' . __( 'Contributors: ', CB_TEXT_DOMAIN );
 		$count   = count( $contributors );
 		$counter = 1;
 		foreach ( $contributors as $contributor ) {
@@ -43,7 +53,8 @@ class WP_Contributor_Post_Content_Filter {
 	}
 
 	/**
-	 * Conditional Logic.
+	 * Add where conditional logic for post content filter for the author pages.
+	 *
 	 * @param $where
 	 * @param $query
 	 *
@@ -51,14 +62,14 @@ class WP_Contributor_Post_Content_Filter {
 	 */
 	public function posts_where_filter( $where, $query ) {
 		global $wpdb;
-		if ( $query->is_author() ) {
+		if ( is_admin() || ! $query->is_author() ) {
 			return $where;
 		}
 
 		$authorSlug = get_query_var( 'author_name' );
 		$authorData = get_user_by( 'slug', $authorSlug );
 		$termSlug   = (string) $authorData->data->ID;
-		$getTerm    = get_term_by( 'slug', $termSlug, 'contributors' );
+		$getTerm    = get_term_by( 'slug', $termSlug, CB_TAXONOMY );
 		$getTerm    = $getTerm->term_id;
 		$where      = str_replace(
 			"AND ({$wpdb->posts}.post_author = " . $authorData->data->ID . ")",
@@ -71,7 +82,7 @@ class WP_Contributor_Post_Content_Filter {
 	}
 
 	/**
-	 * Modify the author query posts SQL to include posts
+	 * Modify the author query posts SQL to include posts based on `contributors` taxonomy.
 	 *
 	 * @param $join
 	 * @param $query
@@ -81,10 +92,11 @@ class WP_Contributor_Post_Content_Filter {
 	public function posts_join_filter( $join, $query ) {
 		global $wpdb;
 		if (
+			is_admin() ||
 			! $query->is_author() ||
 			(
 				! empty( $query->query_vars['post_type'] ) &&
-				! is_object_in_taxonomy( $query->query_vars['post_type'], 'contributors' )
+				! is_object_in_taxonomy( $query->query_vars['post_type'], CB_TAXONOMY )
 			)
 		) {
 			return $join;

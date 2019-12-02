@@ -1,7 +1,7 @@
 <?php
 namespace Contributor\admin\post;
 
-class Wp_Contributor_Post {
+class WP_Contributor_Post {
 
 	/**
 	 * Screens.
@@ -11,6 +11,13 @@ class Wp_Contributor_Post {
 	private $screens = [
 		'post',
 	];
+
+	/**
+	 * Nonce Key.
+	 *
+	 * @var string
+	 */
+	private $nonce_key = 'contributor_nonce';
 
 	/**
 	 * Class construct method. Adds actions to their respective WordPress hooks.
@@ -27,7 +34,7 @@ class Wp_Contributor_Post {
 	public function add_meta_boxes() {
 		foreach ( $this->screens as $screen ) {
 			add_meta_box(
-				'contributors',
+				CB_TAXONOMY,
 				__( 'Contributors', CB_TEXT_DOMAIN ),
 				[ $this, 'add_meta_box_callback' ],
 				$screen,
@@ -43,7 +50,7 @@ class Wp_Contributor_Post {
 	 * @param object $post WordPress post object
 	 */
 	public function add_meta_box_callback( $post ) {
-		wp_nonce_field( '_contributor_nonce', 'contributor_nonce' );
+		wp_nonce_field( '_' . $this->nonce_key, $this->nonce_key );
 		$users = $this->get_all_users();
 		if ( empty( $users ) ) {
 			return;
@@ -57,7 +64,7 @@ class Wp_Contributor_Post {
 			?>
 			<p>
 				<input
-					type="checkbox" name="contributors[]" id="contributor_<?php echo $user->ID; ?>"
+					type="checkbox" name="<?php echo CB_TAXONOMY; ?>[]" id="contributor_<?php echo $user->ID; ?>"
 					value="<?php echo $user->ID; ?>"
 					<?php echo ( $this->check_contributor_meta( $post->ID, $user->ID ) ) ? 'checked' : ''; ?> />
 				<label for="contributor_author"><?php _e( ucfirst( $user->display_name ), CB_TEXT_DOMAIN ); ?></label></p>
@@ -77,29 +84,28 @@ class Wp_Contributor_Post {
 			return;
 		}
 
-		$nonce_key = 'contributor_nonce';
-		$nonce     = filter_input( INPUT_POST, $nonce_key, FILTER_SANITIZE_STRING );
+		$nonce     = filter_input( INPUT_POST, $this->nonce_key, FILTER_SANITIZE_STRING );
 		echo $nonce;
 		if (
 			! $nonce ||
-			! wp_verify_nonce( $nonce, '_contributor_nonce' ) ||
+			! wp_verify_nonce( $nonce, '_' . $this->nonce_key ) ||
 			! current_user_can( 'edit_post', $post_id )
 		) {
 			return;
 		}
 
-		$contributors = filter_input( INPUT_POST, 'contributors', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
+		$contributors = filter_input( INPUT_POST, CB_TAXONOMY, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 		if ( empty( $contributors ) ) {
 			$author       = $post->post_author;
 			$contributors = [ 0 => $author ];
 		}
 
-		update_post_meta( $post_id, 'contributors', $contributors );
-		wp_set_object_terms( $post_id, $contributors, 'contributors' );
+		update_post_meta( $post_id, CB_TAXONOMY, $contributors );
+		wp_set_object_terms( $post_id, $contributors, CB_TAXONOMY );
 	}
 
 	public function check_contributor_meta( $post_id, $user_id ) {
-		$contributors = get_post_meta( $post_id, 'contributors', true );
+		$contributors = get_post_meta( $post_id, CB_TAXONOMY, true );
 
 		return empty( $contributors ) ? ( get_current_user_id() === $user_id ) : in_array( $user_id, $contributors );
 	}

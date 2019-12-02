@@ -50,7 +50,7 @@ class WP_Contributor_taxonomy {
 			'show_in_nav_menus'     => true,
 			'show_tagcloud'         => true
 		];
-		register_taxonomy( 'contributors', [ 'post' ], $args );
+		register_taxonomy( CB_TAXONOMY, [ 'post' ], $args );
 	}
 
 }
