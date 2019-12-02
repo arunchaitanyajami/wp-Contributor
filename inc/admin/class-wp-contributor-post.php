@@ -1,4 +1,9 @@
 <?php
+/**
+ * Contributor metabox for allowed post-types.
+ *
+ * @package WordPress
+ */
 namespace Contributor\admin\post;
 
 class WP_Contributor_Post {
@@ -9,7 +14,7 @@ class WP_Contributor_Post {
 	 * @var array
 	 */
 	private $screens = [
-		'post',
+		'post'
 	];
 
 	/**
@@ -47,17 +52,17 @@ class WP_Contributor_Post {
 	/**
 	 * Generates the HTML for the meta box
 	 *
-	 * @param object $post WordPress post object
+	 * @param \WP_Post $post WordPress post object
 	 */
-	public function add_meta_box_callback( $post ) {
+	public function add_meta_box_callback( \WP_Post $post ) {
 		wp_nonce_field( '_' . $this->nonce_key, $this->nonce_key );
-		$users = $this->get_all_users();
+		$users = get_users();
 		if ( empty( $users ) ) {
 			return;
 		}
 
 
-		foreach ( $users as $user ) {
+		foreach ( $users as $user ) :
 			if ( ! $user instanceof \WP_User ) {
 				continue;
 			}
@@ -70,16 +75,16 @@ class WP_Contributor_Post {
 				<label for="contributor_author"><?php _e( ucfirst( $user->display_name ), CB_TEXT_DOMAIN ); ?></label></p>
 			</p>
 			<?php
-		}
+		endforeach;
 	}
 
 	/**
 	 * Hooks into WordPress' save_post function.
 	 *
-	 * @param int    $post_id Post Id.
-	 * @param object $post    Post Object.
+	 * @param int      $post_id Post Id.
+	 * @param \WP_Post $post    Post Object.
 	 */
-	public function save_post( int $post_id, $post ) {
+	public function save_post( int $post_id, \WP_Post $post ) {
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return;
 		}
@@ -104,13 +109,21 @@ class WP_Contributor_Post {
 		wp_set_object_terms( $post_id, $contributors, CB_TAXONOMY );
 	}
 
-	public function check_contributor_meta( $post_id, $user_id ) {
+	/**
+	 * Check if user exists in post contributor meta.
+	 *
+	 * @param int $post_id Post Id.
+	 * @param int $user_id User Id.
+	 *
+	 * @return bool
+	 */
+	public function check_contributor_meta( int $post_id, int $user_id ): bool {
+		if ( empty( $post_id ) ) {
+			return false;
+		}
+
 		$contributors = get_post_meta( $post_id, CB_TAXONOMY, true );
 
-		return empty( $contributors ) ? ( get_current_user_id() === $user_id ) : in_array( $user_id, $contributors );
-	}
-
-	private function get_all_users(){
-		return get_users();
+		return empty( $contributors ) ? ( get_current_user_id() === ( $user_id ) ) : in_array( $user_id, $contributors );
 	}
 }

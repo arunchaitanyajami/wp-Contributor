@@ -4,7 +4,7 @@
  */
 namespace Contributor\inc\admin\taxonomy;
 
-class WP_Contributor_taxonomy {
+class WP_Contributor_Taxonomy {
 
 	/**
 	 * Rtcamp_Contributor_taxonomy constructor.

@@ -26,7 +26,7 @@ class WP_Contributor_Post_Content_Filter {
 	 *
 	 * @return string
 	 */
-	public function show_multi_authors( $content ) {
+	public function show_multi_authors( string $content ) : string {
 
 		$contributors = get_post_meta( get_the_ID(), CB_TAXONOMY, true );
 		/* If there are not multiple authors associated , then don't do anything */
@@ -39,12 +39,19 @@ class WP_Contributor_Post_Content_Filter {
 		$counter = 1;
 		foreach ( $contributors as $contributor ) {
 
-			$authorInfo = get_user_by( 'id', $contributor );
-			$author_url = get_author_posts_url( $contributor );
-			$authorName = ucfirst( $authorInfo->display_name );
-			$comma      = ( $counter == $count ) ? '' : ', ';
-			$avatar     = get_avatar_url( $contributor );
-			$markup     .= "<span><a href=" . $author_url . "><img width='3%' src=".$avatar."/>$authorName</a>$comma</span>";
+			$author_info = get_user_by( 'id', $contributor );
+			if ( $author_info instanceof \WP_User ) {
+				continue;
+			}
+
+			$author_url  = get_author_posts_url( $contributor );
+			$author_name = ucfirst( $author_info->display_name );
+			$comma       = ( $counter == $count ) ? '' : ', ';
+			$avatar      = get_avatar_url( $contributor );
+			$markup      .= "<span><a href=" . $author_url . "><img width='3%' src=" . $avatar . "/>$author_name</a>$comma</span>";
+			$markup      .= sprintf(
+				'<span></span>',
+			);
 			$counter ++;
 		}
 		$markup .= '</div>';
@@ -55,12 +62,12 @@ class WP_Contributor_Post_Content_Filter {
 	/**
 	 * Add where conditional logic for post content filter for the author pages.
 	 *
-	 * @param $where
-	 * @param $query
+	 * @param string $where WP SQL post WHERE string.
+	 * @param object $query WP Query object
 	 *
-	 * @return mixed|string
+	 * @return string
 	 */
-	public function posts_where_filter( $where, $query ) {
+	public function posts_where_filter( string $where, object $query ): string {
 		global $wpdb;
 		if ( is_admin() || ! $query->is_author() ) {
 			return $where;
@@ -84,12 +91,12 @@ class WP_Contributor_Post_Content_Filter {
 	/**
 	 * Modify the author query posts SQL to include posts based on `contributors` taxonomy.
 	 *
-	 * @param $join
-	 * @param $query
+	 * @param string $join  Post Join Sql
+	 * @param object $query Wp query object
 	 *
 	 * @return string
 	 */
-	public function posts_join_filter( $join, $query ) {
+	public function posts_join_filter( string $join, object $query ): string {
 		global $wpdb;
 		if (
 			is_admin() ||

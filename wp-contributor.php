@@ -27,17 +27,14 @@ require_once 'inc/admin/class-wp-contributor-taxonomy.php';
 require_once 'inc/class-wp-author-content-filter.php';
 
 use Contributor\admin\post\WP_Contributor_Post;
-use Contributor\inc\admin\taxonomy\WP_Contributor_taxonomy;
+use Contributor\inc\admin\taxonomy\WP_Contributor_Taxonomy;
 use Contributor\inc\content\WP_Contributor_Post_Content_Filter;
 
 /**
  * Fire all the required function once the plugin is loaded.
  */
 function wp_contributor_load_plugin(){
-	// Disable for posts.
-	add_filter( 'use_block_editor_for_post', '__return_false', 10 );
-
-	new WP_Contributor_taxonomy();
+	new WP_Contributor_Taxonomy();
 	new Wp_Contributor_Post();
 	new WP_Contributor_Post_Content_Filter();
 }
